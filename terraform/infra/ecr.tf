@@ -12,3 +12,53 @@
 # Extra (not in book, worth it): ecr:GetAuthorizationToken is account-level and
 # CANNOT be scoped to a repo (Resource = "*"). Without it `docker login` fails.
 # Add a second statement for it.
+
+
+
+resource "aws_ecr_repository" "main" {
+  for_each             = local.repositories
+  name                 = "ecr-${local.prefix}-${each.key}"
+  image_tag_mutability = "MUTABLE"
+}
+
+resource "aws_iam_group" "ecr_image_pushers" {
+  name = "${local.prefix}-ecr-image-pushers"
+}
+
+resource "aws_iam_group_policy" "ecr_image_pushers" {
+  for_each = local.repositories
+  name     = "${local.prefix}-${each.key}-ecr-image-push-policy"
+  group    = aws_iam_group.ecr_image_pushers.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+	  "ecr:GetDownloadUrlForLayer",
+	  "ecr:BatchGetImage",
+	  "ecr:BatchCheckLayerAvailability",
+	  "ecr:PutImage",
+	  "ecr:InitiateLayerUpload",
+	  "ecr:UploadLayerPart",
+	  "ecr:CompleteLayerUpload",
+        ]
+        Resource = aws_ecr_repository.main[each.key].arn
+      },
+      {
+	  Effect   = "Allow"
+	  Action   = ["ecr:GetAuthorizationToken"]
+	  Resource = "*"
+      }
+    ]
+  })
+}
+
+
+resource "aws_iam_group_membership" "ecr_image_pushers" {
+  name  = "${local.prefix}-ecr-image-push-membership"
+  users = var.ecr_image_pushers
+  group = aws_iam_group.ecr_image_pushers.name
+}
+

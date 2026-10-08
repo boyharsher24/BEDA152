@@ -9,7 +9,7 @@ locals {
     [for s in aws_subnet.private : s.id],
     [for s in aws_subnet.public : s.id],
   )
-
-  # TODO (Task 2): repository_list = ["raskur"] and a map built with a for expression
-  #   -> see book "Container registry"
+  
+  repository_list = ["raskur"]
+  repositories = { for name in local.repository_list : name => name }
 }

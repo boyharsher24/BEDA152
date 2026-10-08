@@ -1,0 +1,42 @@
+# TASK 12/13 - two workspaces, two jobs, ordered with `needs`  (book: Fig 8.12 / "Terraform")
+name: terraform-apply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+
+env:
+  TERRAFORM_VERSION: '1.5.7'
+
+jobs:
+  infra:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform/infra
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      # TODO: terraform init with -backend-config bucket/region/key (book pattern; needs
+      #       `backend "s3" {}` in versions.tf), AWS creds from vars/secrets
+      # TODO: terraform apply -auto-approve
+      # TODO: expose outputs (eks_cluster_name, workload_identity_role, ...) as job outputs
+
+  k8s:
+    needs: infra
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform/k8s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      # TODO: terraform init (different backend key!)
+      # TODO: two-pass apply (helm CRDs first via -target, then everything) with
+      #       -var eks_cluster_name=${{ needs.infra.outputs.... }} etc.

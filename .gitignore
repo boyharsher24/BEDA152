@@ -1,5 +1,7 @@
-__pycache__/
-*.pyc
-.venv/
-venv/
-.env
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!example.tfvars
+.aws.env
+crash.log

@@ -1,0 +1,5 @@
+# copy to terraform.tfvars and fill from `terraform output` in ../infra
+eks_cluster_name       = "eks-raskur-dev"
+ecr_repository_name    = "ecr-raskur-dev-raskur"
+workload_identity_role = "arn:aws:iam::<ACCOUNT_ID>:role/<role-name>"
+image_tag              = "<tag you pushed>"
